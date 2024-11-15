@@ -73,7 +73,7 @@ class Particle(MovableEntity):
         
         # self.x , self.y ,self.theta  are set with new values
         x=x+random.uniform(-7,7)
-        y=y
+        y=y+random.uniform(-7,7)
         theta=theta
         coord=[x,y,theta]
         return coord
