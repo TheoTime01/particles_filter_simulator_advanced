@@ -72,6 +72,11 @@ class Particle(MovableEntity):
         #########################
         
         # self.x , self.y ,self.theta  are set with new values
+        x=x+random.uniform(-7,7)
+        y=y
+        theta=theta
+        coord=[x,y,theta]
+        return coord
 
     def generate_rand_coord(self, h: int ,w:int, obs_m:np.typing.ArrayLike,OBSTACLE_VALUE =1,h_min:int=0, w_min:int=0, theta_max=np.pi*2):
         x = random.randint(w_min, w-1);

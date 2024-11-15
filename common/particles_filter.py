@@ -209,14 +209,14 @@ class ParticlesFilter:
         # keep this for display
         # p_weight_max is the maximum weight computed for all particles
         # weight_list holds weight of particle following the same order than self.particles_list
-        p_weight_max =0
+        p_weight_max = 0
         weight_list=[]
 
         for particle in self.particles_list:
             # Calculer l'erreur entre les perceptions de la particule et celles du robot
             error = np.sum((np.array(particle.ranges) - np.array(robot.ranges)))
 
-            weight = np.exp(-error / (2 * np.var(robot.ranges)))
+            weight = np.exp(-error / (2 * (np.var(robot.ranges)**2)))
             particle.weight = weight 
             weight_list.append(weight)
 
@@ -242,67 +242,92 @@ class ParticlesFilter:
         self.weight_list = weight_list
 
         return weight_list, p_weight_max
-    
-
-#    weight_list = []
-#     p_weight_max = 0  # This will track the maximum weight among all particles
-
-#     for particle in self.particles_list:
-#         # Calculer l'erreur entre les perceptions de la particule et celles du robot
-#         error = np.sum((np.array(particle.ranges) - np.array(robot.ranges))**2)
-
-#         # Poids basé sur une fonction gaussienne
-#         weight = np.exp(-error / (2 * np.var(robot.ranges)))
-#         particle.weight = weight  # Assigner le poids à la particule
-#         weight_list.append(weight)
-
-#         # Mettre à jour le poids maximum
-#         if weight > p_weight_max:
-#             p_weight_max = weight
-
-#     # Normalisation des poids pour qu'ils forment une distribution de probabilité
-#     total_weight = sum(weight_list)
-#     if total_weight > 0:
-#         weight_list = [w / total_weight for w in weight_list]
-#         for i, particle in enumerate(self.particles_list):
-#             particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
-
-#     # Enregistrer pour un affichage ou un calcul ultérieur
-#     self.p_weight_max = p_weight_max
-#     self.weight_list = weight_list
-
-#     return weight_list, p_weight_max
 
 
-    def resample_particles(self):
+    # def resample_particles(self):
 
-        """ Create a new generation of particles based on the weight and pose of the ancestors.
+    #     """ Create a new generation of particles based on the weight and pose of the ancestors.
 
-        Results
-		----------
-        - self.particles_list receives the new generation of particles
-        """
+    #     Results
+	# 	----------
+    #     - self.particles_list receives the new generation of particles
+    #     """
 
-        new_particles_list =[]
+    #     new_particles_list =[]
 
 
-        #########################
-        #      WORK  TODO       #
-        #########################
-        #                       #
-        #                       #
-        #                       #
-        #                       #
-        #########################
-
-        # Tips do not forget to use self.weight_list for new particles generation creation
-        #       complete Particle, generate_new_coord_theta function and use it here like p.generate_new_coord_theta(p.x,p.y,p.theta) 
+    #     #########################
+    #     #      WORK  TODO       #
+    #     #########################
+    #     #                       #
+    #     #                       #
+    #     #                       #
+    #     #                       #
+    #     #########################
+    #     total_weight = sum(self.weight_list)
+    #     print(total_weight)
         
-        if len(new_particles_list) >0:
-            self.particles_list = new_particles_list
+    #     seuil = random.uniform(0, total_weight)
+        
+    #     for i in range(len(self.particles_list)):
+    #         j=0
+    #         flag=True
+    #         cumulative_weight = 0
+    #         while flag:
+    #             weight= self.weight_list[j]
+    #             particle = self.particles_list[j]
+    #             cumulative_weight += weight
+    #             if cumulative_weight >= seuil:
+    #                 new_particles_list.append(particle)
+    #                 flag=False
+    #             j+=1
+    #     # Tips do not forget to use self.weight_list for new particles generation creation
+    #     #       complete Particle, generate_new_coord_theta function and use it here like p.generate_new_coord_theta(p.x,p.y,p.theta) 
+    #     for i in range(len(new_particles_list)):
+    #         coord = new_particles_list[i].generate_new_coord_theta(new_particles_list[i].x,new_particles_list[i].y,new_particles_list[i].theta)
+    #         new_particles_list[i]=Particle(self.particle_config,coord[0],coord[1],coord[2])  
             
+    #     if len(new_particles_list) >0:
+    #         self.particles_list = new_particles_list
+  
+    def resample_particles(self):
+        """ Create a new generation of particles based on the weight and pose of the ancestors.
+        """
+        new_particles_list = []
+        total_weight = sum(self.weight_list)
+        
+        # Loop over the number of particles to create the new generation
+        for i in range(len(self.particles_list)):
+            # Generate a new random threshold for each particle
+            seuil = random.uniform(0, total_weight)
+            cumulative_weight = 0
+            j = 0
+            
+            # Loop through particles to find one matching the threshold
+            while j < len(self.particles_list):
+                weight = self.weight_list[j]
+                particle = self.particles_list[j]
+                cumulative_weight += weight
+                
+                if cumulative_weight >= seuil:
+                    new_particles_list.append(particle)
+                    break  # Exit while loop once a particle is selected
+                j += 1
+            
+        # Generate new coordinates for each particle in the new list
+        for i in range(len(new_particles_list)):
+            # Slightly perturb each particle's position and orientation
+            coord = new_particles_list[i].generate_new_coord_theta(
+                new_particles_list[i].x, new_particles_list[i].y, new_particles_list[i].theta
+            )
+            # Replace with the newly generated particle with updated coordinates
+            new_particles_list[i] = Particle(self.particle_config, coord[0], coord[1], coord[2])  
 
+        # Update the main particles list with the newly resampled particles
+        if new_particles_list:
+            self.particles_list = new_particles_list
 
+            
             
 
     def _get_ranges_of_entities(self, robot:Robot):
