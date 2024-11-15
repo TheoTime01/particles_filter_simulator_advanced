@@ -228,8 +228,8 @@ class ParticlesFilter:
         total_weight = sum(weight_list)
         if total_weight > 0:
             weight_list = [w / total_weight for w in weight_list]
-            for i, particle in enumerate(self.particles_list):
-                particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
+            # for i, particle in enumerate(self.particles_list):
+            #     particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
         #########################
         #      WORK  TODO       #
         #########################
@@ -295,6 +295,7 @@ class ParticlesFilter:
         """
         new_particles_list = []
         total_weight = sum(self.weight_list)
+        print(f"weight:{self.weight_list}")
         
         # Loop over the number of particles to create the new generation
         for i in range(len(self.particles_list)):
