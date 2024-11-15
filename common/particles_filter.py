@@ -219,7 +219,7 @@ class ParticlesFilter:
         # Calculer l'erreur entre les perceptions de la particule et celles du robot
             error = np.sum((np.array(particle.ranges) - np.array(robot.ranges)))
 
-            weight = np.exp(-error / (2 * np.var(robot.ranges)))
+            weight = np.exp(-error / (2 * np.var(robot.ranges)**2))
             particle.weight = weight 
             weight_list.append(weight)
 
@@ -291,35 +291,9 @@ class ParticlesFilter:
         #       complete Particle, generate_new_coord_theta function and use it here like p.generate_new_coord_theta(p.x,p.y,p.theta) 
         if len(new_particles_list) >0:
             self.particles_list = new_particles_list
-        for i in range(len(new_particles_list)):
-            coord = self.generate_new_coord_theta(new_particles_list[i].x,new_particles_list[i].y,new_particles_list[i].theta)
-            new_particles_list[i]=Particle(self.particle_config,coord[0],coord[1],coord[2])    
+        for particle in new_particles_list:
+            particle.generate_new_coord_theta(particle.x,particle.y,particle.theta)
             
-
-
-    def generate_new_coord_theta(self,x:int,y:int,theta:float):
-        """ Generate new pose (x,y,theta) of the current particle around (exploration) the given pose
-        Parameters
-        ----------
-        - x: int: x base
-        - y: int : y base
-        - theta: float :theta base
-        """
-        
-        #########################
-        #      WORK  TODO       #
-        #########################
-        #                       #
-        #                       #
-        #                       #
-        #                       #
-        #########################
-        # self.x , self.y ,self.theta  are set with new values
-        x=x+random.uniform(-5,5)
-        y=y
-        theta=theta
-        coord=[x,y,theta]
-        return coord
 
             
 
