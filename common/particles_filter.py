@@ -140,6 +140,11 @@ class ParticlesFilter:
         #                       #
         #########################
         
+        for i in range(nbr):
+            particles_list.append(Particle(random.uniform(min_x,max_x),random.uniform(min_y,max_y),random.uniform(0,max_theta)))
+            
+
+
         # keep this for display
         w_list=np.zeros((nbr))
         w_list=w_list+1 / float(nbr)
