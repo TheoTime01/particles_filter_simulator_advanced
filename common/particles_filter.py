@@ -139,6 +139,8 @@ class ParticlesFilter:
         #                       #
         #                       #
         #########################
+        for _ in range(nbr):
+            particles_list.append(Particle(self.particle_config,np.random.uniform(min_x, max_x), np.random.uniform(min_y, max_y), np.random.uniform(0, max_theta)))
         
         # keep this for display
         w_list=np.zeros((nbr))
@@ -210,6 +212,24 @@ class ParticlesFilter:
         p_weight_max =0
         weight_list=[]
 
+        for particle in self.particles_list:
+            # Calculer l'erreur entre les perceptions de la particule et celles du robot
+            error = np.sum((np.array(particle.ranges) - np.array(robot.ranges)))
+
+            weight = np.exp(-error / (2 * np.var(robot.ranges)))
+            particle.weight = weight 
+            weight_list.append(weight)
+
+            # Mettre à jour le poids maximum
+            if weight > p_weight_max:
+                p_weight_max = weight
+
+        # Normalisation des poids pour qu'ils forment une distribution de probabilité (gaussienne)
+        total_weight = sum(weight_list)
+        if total_weight > 0:
+            weight_list = [w / total_weight for w in weight_list]
+            for i, particle in enumerate(self.particles_list):
+                particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
         #########################
         #      WORK  TODO       #
         #########################
@@ -223,6 +243,36 @@ class ParticlesFilter:
 
         return weight_list, p_weight_max
     
+
+#    weight_list = []
+#     p_weight_max = 0  # This will track the maximum weight among all particles
+
+#     for particle in self.particles_list:
+#         # Calculer l'erreur entre les perceptions de la particule et celles du robot
+#         error = np.sum((np.array(particle.ranges) - np.array(robot.ranges))**2)
+
+#         # Poids basé sur une fonction gaussienne
+#         weight = np.exp(-error / (2 * np.var(robot.ranges)))
+#         particle.weight = weight  # Assigner le poids à la particule
+#         weight_list.append(weight)
+
+#         # Mettre à jour le poids maximum
+#         if weight > p_weight_max:
+#             p_weight_max = weight
+
+#     # Normalisation des poids pour qu'ils forment une distribution de probabilité
+#     total_weight = sum(weight_list)
+#     if total_weight > 0:
+#         weight_list = [w / total_weight for w in weight_list]
+#         for i, particle in enumerate(self.particles_list):
+#             particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
+
+#     # Enregistrer pour un affichage ou un calcul ultérieur
+#     self.p_weight_max = p_weight_max
+#     self.weight_list = weight_list
+
+#     return weight_list, p_weight_max
+
 
     def resample_particles(self):
 
