@@ -267,7 +267,7 @@ class ParticlesFilter:
         normalized_weights = [w / total_weight for w in self.weight_list]
 
         for i in range(len(self.particles_list)):
-            p = random.choices(self.particles_list, normalized_weights,k=1)[0]
+            p = copy.deepcopy(random.choices(self.particles_list, normalized_weights,k=1)[0]) #Copie nécessaire, sinon le code modifie la particule elle meme et la nouvelle génération fait n'importe quoi
             p.generate_new_coord_theta(p.x,p.y,p.theta)
             new_particles_list.append(p)
         # Tips do not forget to use self.weight_list for new particles generation creation
