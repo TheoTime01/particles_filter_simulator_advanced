@@ -72,9 +72,9 @@ class Particle(MovableEntity):
         #########################
         
         # self.x , self.y ,self.theta  are set with new values
-        self.x = x + np.random.normal(0, self.config.NEW_GEN_X_SIGMA)
-        self.y = y + np.random.normal(0, self.config.NEW_GEN_Y_SIGMA)
-        self.theta = theta + np.random.normal(0, self.config.NEW_GEN_THETA_SIGMA)
+        self.x = x + np.random.uniform(-self.config.NEW_GEN_X_SIGMA, self.config.NEW_GEN_X_SIGMA)
+        self.y = y + np.random.uniform(-self.config.NEW_GEN_Y_SIGMA, self.config.NEW_GEN_Y_SIGMA)
+        self.theta = theta + np.random.uniform(-self.config.NEW_GEN_THETA_SIGMA, self.config.NEW_GEN_THETA_SIGMA)
 
     def generate_rand_coord(self, h: int ,w:int, obs_m:np.typing.ArrayLike,OBSTACLE_VALUE =1,h_min:int=0, w_min:int=0, theta_max=np.pi*2):
         x = random.randint(w_min, w-1)
