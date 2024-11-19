@@ -14,3 +14,7 @@ tools/__pycache__/__init__.cpython-310.pyc
 tools/__pycache__/env_builder.cpython-310.pyc
 tools/__pycache__/PathTools.cpython-310.pyc
 tools/__pycache__/range_tools.cpython-310.pyc
+common/__pycache__/*
+venv-p-filter/*
+tools/__pycache__/*
+display/__pycache__/*
