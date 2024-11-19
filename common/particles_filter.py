@@ -212,14 +212,14 @@ class ParticlesFilter:
         # keep this for display
         # p_weight_max is the maximum weight computed for all particles
         # weight_list holds weight of particle following the same order than self.particles_list
-        p_weight_max =0
+        p_weight_max = 0
         weight_list=[]
 
         for particle in self.particles_list:
-        # Calculer l'erreur entre les perceptions de la particule et celles du robot
+            # Calculer l'erreur entre les perceptions de la particule et celles du robot
             error = np.sum((np.array(particle.ranges) - np.array(robot.ranges)))
 
-            weight = np.exp(-error / (2 * np.var(robot.ranges)**2))
+            weight = np.exp(-np.power(error,2) / (2 * np.power(np.var(robot.ranges),2)))
             particle.weight = weight 
             weight_list.append(weight)
 
@@ -227,13 +227,8 @@ class ParticlesFilter:
             if weight > p_weight_max:
                 p_weight_max = weight
 
-        # Normalisation des poids pour qu'ils forment une distribution de probabilité (gaussienne)
-        total_weight = sum(weight_list)
-        if total_weight > 0:
-            weight_list = [w / total_weight for w in weight_list]
-            for i, particle in enumerate(self.particles_list):
-                particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
-
+            # for i, particle in enumerate(self.particles_list):
+            #     particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
         #########################
         #      WORK  TODO       #
         #########################
@@ -242,7 +237,6 @@ class ParticlesFilter:
         #                       #
         #                       #
         #########################
-
         self.p_weight_max = p_weight_max
         self.weight_list = weight_list
 
@@ -269,30 +263,16 @@ class ParticlesFilter:
         #                       #
         #                       #
         #########################
-
-        total_weight = sum(self.weight_list)
-        print(total_weight)
-        
-        seuil = random.uniform(0, total_weight)
-        
         for i in range(len(self.particles_list)):
-            j=0
-            flag=True
-            cumulative_weight = 0
-            while flag:
-                weight= self.weight_list[j]
-                particle = self.particles_list[j]
-                cumulative_weight += weight
-                if cumulative_weight >= seuil:
-                    new_particles_list.append(particle)
-                    flag=False
-                j+=1
+            new_particles_list.append(random.choices(self.particles_list, self.weight_list)[0])
+        print(self.weight_list)
         # Tips do not forget to use self.weight_list for new particles generation creation
         #       complete Particle, generate_new_coord_theta function and use it here like p.generate_new_coord_theta(p.x,p.y,p.theta) 
         if len(new_particles_list) >0:
             self.particles_list = new_particles_list
-        for particle in new_particles_list:
+        for particle in self.particles_list:
             particle.generate_new_coord_theta(particle.x,particle.y,particle.theta)
+
             
 
             
