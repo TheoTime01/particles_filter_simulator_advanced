@@ -22,7 +22,7 @@ class Simulator():
     simple_mode: bool =False
 
     def __init__(self, h:int,w:int,r_x:int,r_y:int,r_theta:float, simple_mode:bool =False) -> None:
-        self.obs_map = env_builder.load_black_and_white_env('./maps/map-room1.png')
+        self.obs_map = env_builder.load_black_and_white_env('./maps/sinus_line2.png')
         
         
         self.simple_mode=simple_mode

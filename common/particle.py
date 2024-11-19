@@ -72,11 +72,21 @@ class Particle(MovableEntity):
         #########################
         
         # self.x , self.y ,self.theta  are set with new values
-        x=x+random.uniform(-7,7)
-        y=y+random.uniform(-7,7)
-        theta=theta
-        coord=[x,y,theta]
-        return coord
+
+        # Define standard deviations for exploration around the given position
+        # These values control how much particles can deviate from the base position
+        sigma_position = 1  # Standard deviation for position (e.g., 5 units)
+        sigma_theta = 0.1   # Standard deviation for theta (e.g., 0.1 radians)
+
+        # Generate new coordinates with a normal distribution around the given (x, y)
+        self.x = int(np.random.normal(x, sigma_position))
+        self.y = int(np.random.normal(y, sigma_position))
+        
+        # Generate a new theta with a normal distribution around the given theta
+        self.theta = theta + np.random.normal(0, sigma_theta)
+
+        # Ensure theta stays within the range [-pi, pi] to avoid rotation ambiguity
+        self.theta = (self.theta + np.pi) % (2 * np.pi) - np.pi
 
     def generate_rand_coord(self, h: int ,w:int, obs_m:np.typing.ArrayLike,OBSTACLE_VALUE =1,h_min:int=0, w_min:int=0, theta_max=np.pi*2):
         x = random.randint(w_min, w-1);

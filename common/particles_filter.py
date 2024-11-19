@@ -73,45 +73,40 @@ class ParticlesFilter:
 
         return particles_list
     
-    def getRandParticleAround(self,nbr: int,x :int, y:int,theta:float, SIGMA_XY:float =2,SIGMA_THETA:float = np.pi/8):
-        """ Generate random particles the given coordinate
+    def getRandParticleAround(self, nbr: int, x: int, y: int, theta: float, SIGMA_XY: float = 2, SIGMA_THETA: float = np.pi / 8):
+        """ Generate random particles around the given coordinate
 
         Parameters
-		----------
-        - nb: int: number of particles
+        ----------
+        - nbr: int: number of particles
         - x: int : x reference
         - y: int : y reference
         - theta: float : theta reference
         - SIGMA_XY: int : x and y dispersion 
-        - SIGMA_THETA: int : theta  dispersion
+        - SIGMA_THETA: int : theta dispersion
 
         Returns:
-        - particles_list: T.List[Particle]: list of nex generated particles
+        - particles_list: t.List[Particle]: list of new generated particles
         """
         
         particles_list = []
         
-        
-        #########################
-        #      WORK  TODO       #
-        #########################
-        #                       #
-        #                       #
-        #                       #
-        #                       #
-        #########################
+        # Generate each particle around (x, y, theta) with Gaussian noise
+        for _ in range(nbr):
+            # Apply Gaussian noise to x, y, and theta
+            px = np.random.normal(x, SIGMA_XY)
+            py = np.random.normal(y, SIGMA_XY)
+            ptheta = np.random.normal(theta, SIGMA_THETA)
+            
+            # Create the new particle and add to the list
+            particle = Particle(self.particle_config, px, py, ptheta)
+            particles_list.append(particle)
 
-        # Use code below for simple mode, fix the y and your theta value of your particles
-        # if self.fixed_y != self.FIXED_Y_NO_VALUE:
-        #    y = self.fixed_y
-        #    theta = np.random.normal(theta, 0, 1)[0]
-
-
-        # keep this for display
-        w_list=np.zeros((nbr))
-        w_list=w_list+1 / float(nbr)
+        # Set equal weights for all particles
+        w_list = np.full((nbr,), 1 / float(nbr))
         self.weight_list = np.asarray(w_list)
         return particles_list
+
 
 
     def getRandParticle(self,nbr: int, min_x:int , max_x:int , min_y: int , max_y: int, max_theta:float= np.pi*2):
@@ -182,151 +177,76 @@ class ParticlesFilter:
                 else:
                     p.generate_rand_coord(self.fixed_y+1,self.width,self.obs_matrix, h_min=self.fixed_y,theta_max=0)
 
-    def weighting_particles_list(self,robot:Robot):
-        """ Evaluate each particle in self.particles_list according their ranges perception
-        p.ranges hold the distance to obstacles. Each range represents a distance between the current particle p to an obstacle given an angle
-        p.ranges and robot.ranges are order in the same way. Meaning that p.ranges[0] and robot.ranges[0] represent the perception from the same angle
+    def weighting_particles_list(self, robot: Robot):
+        """ Evaluate each particle in self.particles_list according to their ranges perception
+        and update the weights based on similarity to the robot's range data.
 
         Parameters
-		----------
-        - robot: Robot: Robot , ranges is used to evaluate each particle (robot.ranges)
+        ----------
+        - robot: Robot: Robot, whose ranges are used to evaluate each particle (robot.ranges)
 
         Results
-		----------
-        - Each particle weight (p.weight) belonging to self.particles_list is set
+        ----------
+        - Each particle weight (p.weight) in self.particles_list is updated.
         """
-
-
-        #########################
-        #      WORK  TODO       #
-        #########################
-        #                       #
-        #                       #
-        #                       #
-        #                       #
-        #########################
-        
-        # keep this for display
-        # p_weight_max is the maximum weight computed for all particles
-        # weight_list holds weight of particle following the same order than self.particles_list
+        weight_list = []
         p_weight_max = 0
-        weight_list=[]
-
+        
         for particle in self.particles_list:
-            # Calculer l'erreur entre les perceptions de la particule et celles du robot
-            error = np.sum((np.array(particle.ranges) - np.array(robot.ranges)))
-
-            weight = np.exp(-np.power(error,2) / (2 * np.power(np.var(robot.ranges),2)))
-            particle.weight = weight 
+            # Calculate the weight based on the inverse of the error between particle's and robot's ranges
+            error_sum = sum(
+                abs(particle_range - robot_range)
+                for particle_range, robot_range in zip(particle.ranges, robot.ranges)
+            )
+            print(f"error:{error_sum}")
+            # Apply a Gaussian model to give higher weights to particles with lower error
+            weight = math.exp(-error_sum / (2 * (self.particle_config.ROTATION_MEASURE_ERROR_SIGMA ** 2)))
+            particle.weight = weight
             weight_list.append(weight)
-
-            # Mettre à jour le poids maximum
+            
             if weight > p_weight_max:
                 p_weight_max = weight
-
-        # Normalisation des poids pour qu'ils forment une distribution de probabilité (gaussienne)
-        total_weight = sum(weight_list)
-        if total_weight > 0:
-            weight_list = [w / total_weight for w in weight_list]
-            # for i, particle in enumerate(self.particles_list):
-            #     particle.weight = weight_list[i]  # Mettre à jour chaque poids normalisé
-        #########################
-        #      WORK  TODO       #
-        #########################
-        #                       #
-        #                       #
-        #                       #
-        #                       #
-        #########################
+        
+        # Update class attributes for visualization
         self.p_weight_max = p_weight_max
         self.weight_list = weight_list
 
         return weight_list, p_weight_max
 
 
-    def resample_particles(self):
 
+    def resample_particles(self):
         """ Create a new generation of particles based on the weight and pose of the ancestors.
 
         Results
-		----------
-        - self.particles_list receives the new generation of particles
+        ----------
+        - self.particles_list receives the new generation of particles.
         """
+        new_particles_list = []
+        weights = self.weight_list
+        
+        # Step 1: Perform systematic resampling based on weights
+        index = int(random.random() * self.NB_PARTICLES)
+        beta = 0.0
+        mw = max(weights)  # Maximum weight
 
-        new_particles_list =[]
+        for _ in range(self.NB_PARTICLES):
+            beta += random.uniform(0, 2 * mw)
+            while beta > weights[index]:
+                beta -= weights[index]
+                index = (index + 1) % self.NB_PARTICLES
+            # Clone the chosen particle
+            chosen_particle = self.particles_list[index]
+            new_particle = copy.deepcopy(chosen_particle)
+            new_particle.generate_new_coord_theta(
+                new_particle.x, new_particle.y, new_particle.theta
+            )
+            new_particles_list.append(new_particle)
 
+        # Step 2: Update the particles list with new generation
+        self.particles_list = new_particles_list
 
-        #########################
-        #      WORK  TODO       #
-        #########################
-        #                       #
-        #                       #
-        #                       #
-        #                       #
-        #########################
-        total_weight = sum(self.weight_list)
-        print(total_weight)
-        
-        seuil = random.uniform(0, total_weight)
-        
-        for i in range(len(self.particles_list)):
-            j=0
-            flag=True
-            cumulative_weight = 0
-            while flag:
-                weight= self.weight_list[j]
-                particle = self.particles_list[j]
-                cumulative_weight += weight
-                if cumulative_weight >= seuil:
-                    new_particles_list.append(particle)
-                    flag=False
-                j+=1
-        # Tips do not forget to use self.weight_list for new particles generation creation
-        #       complete Particle, generate_new_coord_theta function and use it here like p.generate_new_coord_theta(p.x,p.y,p.theta) 
-        for i in range(len(new_particles_list)):
-            coord = new_particles_list[i].generate_new_coord_theta(new_particles_list[i].x,new_particles_list[i].y,new_particles_list[i].theta)
-            new_particles_list[i]=Particle(self.particle_config,coord[0],coord[1],coord[2])  
-            
-        if len(new_particles_list) >0:
-            self.particles_list = new_particles_list
-  
-    # def resample_particles(self):
-    #     """ Create a new generation of particles based on the weight and pose of the ancestors.
-    #     """
-    #     new_particles_list = []
-    #     nbr_particles = len(self.particles_list)
-        
-    #     # Normalize weights
-    #     weight_sum = sum(self.weight_list)
-    #     normalized_weights = [w / weight_sum for w in self.weight_list]
-        
-    #     # Calculate cumulative weights
-    #     cumulative_weights = np.cumsum(normalized_weights)
-        
-    #     # Resampling
-    #     index = int(np.random.uniform(0, nbr_particles))
-    #     beta = 0.0
-    #     max_weight = max(normalized_weights)
-        
-    #     for _ in range(nbr_particles):
-    #         beta += np.random.uniform(0, 2.0 * max_weight)
-    #         while beta > cumulative_weights[index]:
-    #             beta -= cumulative_weights[index]
-    #             index = (index + 1) % nbr_particles
-            
-    #         # Copy the selected particle and perturb the coordinates
-    #         selected_particle = self.particles_list[index]
-    #         new_particle = selected_particle.generate_new_coord_theta(
-    #             selected_particle.x, selected_particle.y, selected_particle.theta
-    #         )
-            
-    #         new_particles_list.append(new_particle)
-        
-    #     # Update particles list with new generation
-    #     self.particles_list = new_particles_list
-
-
-            
+                
             
 
     def _get_ranges_of_entities(self, robot:Robot):
