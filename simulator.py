@@ -22,7 +22,8 @@ class Simulator():
     simple_mode: bool =False
 
     def __init__(self, h:int,w:int,r_x:int,r_y:int,r_theta:float, simple_mode:bool =False) -> None:
-        self.obs_map = env_builder.load_black_and_white_env('./maps/map-room1.png')
+        map=input("Choissisez le numéro de la carte à charger (1 à 5):")
+        self.obs_map = env_builder.load_black_and_white_env('./maps/map-room'+map+'.png')
         
         
         self.simple_mode=simple_mode
